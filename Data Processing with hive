@@ -11,10 +11,10 @@ hdfs dfs -mkdir datatp3
 hdfs dfs -mkdir  /user/cloudera/datatp3/football
 hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/.staging
 hive
-
+# Creation de schema ou base de données
 CREATE DATABASE IF NOT EXISTS football;
 SHOW DATABASES;
-
+# Creation des tables sur hive
 # Création de table events
 use football;
 create table events (
@@ -40,13 +40,57 @@ bodypart int,
 assist_method int,
 situation int,
 fast_break int
-);
-LOAD DATA INPATH '/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
+)
 
- # Création de table Odds,
+##Chargement de données vers Hive 
+# Chargement table vers statging temporraire foot 
+CREATE SCHEMA IF NOT EXISTS foot;
+CREATE EXTERNAL TABLE IF NOT EXISTS foot.events (
+id_odsp string, 
+id_event string,
+sort_order int,
+time int,
+text string,
+event_type int,
+event_type2 int,
+side int, 
+event_team string,
+opponent string,
+player string,
+player2 string,
+player_in string, 
+player_out string,
+shot_place int,
+shot_outcome int,
+is_goal int,
+location int,
+bodypart int,
+assist_method int,
+situation int,
+fast_break int
+)
+ ROW FORMAT DELIMITED
+ FIELDS TERMINATED BY ','
+ STORED AS TEXTFILE
+LOCATION '/user/cloudera/datatp3/football/';
+ 
+#SELECT * FROM foot.events SORT BY id_odsp  DESC LIMIT 2;
+INSERT INTO TABLE football.events SELECT * FROM foot.events;
+#SELECT * FROM football.events SORT BY id_odsp  DESC LIMIT 2;
+#hdfs dfs -rm /user/cloudera/datatp3/football/events.scv
+# count des records 
+hive> select count(*) from events;
+# El Classico
+hive> select * from ginf where country='spain' and ht="Barcelona" and at ="Real Madrid";
+hive> select * from ginf where country='spain' and ht="Real Madrid" and at ="Barcelona";
 
+#chargement de table ginf
+#LOAD DATA INPATH '/user/cloudera/datatp3/football/events.csv' OVERWRITE INTO TABLE events;
+LOAD DATA LOCAL INPATH '/home/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
+
+ # Création de table ginf,
 use football; 
-create table ginf (
+create table if not exists football.ginf (
  id_odsp string,
  link_odsp string,
  adv_stats BOOLEAN,
@@ -67,4 +111,34 @@ create table ginf (
  odd_bts_n DOUBLE
 );
 
-LOAD DATA INPATH '/user/cloudera/.staging/ginf.csv' OVERWRITE INTO TABLE football.ginf;
+## Staging 
+CREATE EXTERNAL TABLE IF NOT EXISTS foot.ginf (
+ id_odsp string,
+ link_odsp string,
+ adv_stats BOOLEAN,
+ date date,
+ league string,
+ season string,
+ country string,
+ ht string,
+ at  string,
+ fthg  int,
+ ftag int,
+ odd_h DOUBLE,
+ odd_d DOUBLE,
+ odd_a DOUBLE,
+ odd_over DOUBLE,
+ odd_under DOUBLE,
+ odd_bts DOUBLE,
+ odd_bts_n DOUBLE
+)
+ ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  STORED AS TEXTFILE
+ LOCATION '/user/cloudera/datatp3/football/';
+
+ SELECT * FROM foot.ginf SORT BY id_odsp  DESC LIMIT 2;
+ 
+INSERT INTO TABLE football.ginf SELECT * FROM foot.ginf;
+hdfs dfs -rm /user/cloudera/datatp3/football/ginf.scv
+
