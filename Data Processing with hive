@@ -43,7 +43,7 @@ fast_break int
 )
 
 ##Chargement de données vers Hive 
-# Chargement table vers statging temporraire foot 
+# Chargement table vers staging bd foot 
 CREATE SCHEMA IF NOT EXISTS foot;
 CREATE EXTERNAL TABLE IF NOT EXISTS foot.events (
 id_odsp string, 
