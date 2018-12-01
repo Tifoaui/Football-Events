@@ -1,5 +1,4 @@
-# Préparation d'un dossier qui va contenir nos données sur hdfs  
-cd $HADOOP_HOME
+# Préparation d'un dossier qui va contenir les données sur hdfs  
 hdfs dfs -ls
 hdfs dfs -mkdir /user/cloudera/datatp3
 
@@ -7,9 +6,8 @@ hdfs dfs -mkdir /user/cloudera/datatp3
 wget https://www.kaggle.com/secareanualin/football-events/downloads/football-events.zip
 unzip football-events.zip
 #Copier les données depuis Local Vers hdfs
-hdfs dfs -mkdir datatp3
 hdfs dfs -mkdir  /user/cloudera/datatp3/football
-hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/.staging
+hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/football
 hive
 # Creation de schema ou base de données
 CREATE DATABASE IF NOT EXISTS football;
@@ -40,7 +38,7 @@ bodypart int,
 assist_method int,
 situation int,
 fast_break int
-)
+);
 
 ##Chargement de données vers Hive 
 # Chargement table vers staging bd foot 
