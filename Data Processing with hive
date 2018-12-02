@@ -84,6 +84,29 @@ hive> select count(*) from events;
 hive> select * from ginf where country='spain' and ht="Barcelona" and at ="Real Madrid";
 hive> select * from ginf where country='spain' and ht="Real Madrid" and at ="Barcelona";
 
+
+/********
+11 unique events (1-Attempt(shot), 2-Corner, 3-Foul, 4-Yellow Card, 5-Second yellow card, 6-(Straight) red card, 7-Substitution, 8-Free kick won, 9-Offside, 10-Hand Ball, 11-Penalty conceded)
+*/
+select 
+side
+, event_team
+, time
+, text
+from events
+where event_type=11;
+/*********/
+
+/********Home teams get more penalty kicks than visitors?*******/
+select 
+count(side) as side
+from events
+where event_type=11
+and text like '%draws%'
+group by side
+;
+/*****************************************/
+
 #chargement de table ginf
 #LOAD DATA INPATH '/user/cloudera/datatp3/football/events.csv' OVERWRITE INTO TABLE events;
 LOAD DATA LOCAL INPATH '/home/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
