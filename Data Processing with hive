@@ -7,7 +7,7 @@ wget https://www.kaggle.com/secareanualin/football-events/downloads/football-eve
 unzip football-events.zip
 #Copier les données depuis Local Vers hdfs
 hdfs dfs -mkdir  /user/cloudera/datatp3/football
-hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/football
+hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/datatp3/football
 hive
 # Creation de schema ou base de données
 CREATE DATABASE IF NOT EXISTS football;
@@ -38,7 +38,9 @@ bodypart int,
 assist_method int,
 situation int,
 fast_break int
-);
+)
+row format delimited fields terminated by ','
+;
 
 ##Chargement de données vers Hive 
 # Chargement table vers staging bd foot 
@@ -107,7 +109,12 @@ create table if not exists football.ginf (
  odd_under DOUBLE,
  odd_bts DOUBLE,
  odd_bts_n DOUBLE
-);
+)
+ROW FORMAT DELIMITED
+  FIELDS TERMINATED BY ','
+  STORED AS TEXTFILE
+ LOCATION '/user/cloudera/datatp3/football/'
+;
 
 ## Staging 
 CREATE EXTERNAL TABLE IF NOT EXISTS foot.ginf (
