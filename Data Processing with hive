@@ -74,15 +74,16 @@ fast_break int
  STORED AS TEXTFILE
 LOCATION '/user/cloudera/datatp3/football/';
  
+ 
 #SELECT * FROM foot.events SORT BY id_odsp  DESC LIMIT 2;
 INSERT INTO TABLE football.events SELECT * FROM foot.events;
 #SELECT * FROM football.events SORT BY id_odsp  DESC LIMIT 2;
 #hdfs dfs -rm /user/cloudera/datatp3/football/events.csv
+
+#LOAD DATA INPATH '/user/cloudera/datatp3/football/events.csv' OVERWRITE INTO TABLE events;
+LOAD DATA LOCAL INPATH '/home/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
 # count des records 
 hive> select count(*) from events;
-# El Classico
-hive> select * from ginf where country='spain' and ht="Barcelona" and at ="Real Madrid";
-hive> select * from ginf where country='spain' and ht="Real Madrid" and at ="Barcelona";
 
 
 /********
@@ -107,10 +108,10 @@ group by side
 ;
 /*****************************************/
 
-#chargement de table ginf
-#LOAD DATA INPATH '/user/cloudera/datatp3/football/events.csv' OVERWRITE INTO TABLE events;
-LOAD DATA LOCAL INPATH '/home/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
 
+
+
+#chargement de table ginf
  # Création de table ginf,
 use football; 
 create table if not exists football.ginf (
@@ -168,5 +169,10 @@ CREATE EXTERNAL TABLE IF NOT EXISTS foot.ginf (
  SELECT * FROM foot.ginf SORT BY id_odsp  DESC LIMIT 2;
  
 INSERT INTO TABLE football.ginf SELECT * FROM foot.ginf;
-hdfs dfs -rm /user/cloudera/datatp3/football/ginf.scv
+hdfs dfs -rm /user/cloudera/datatp3/football/ginf.csv
+
+
+# El Classico
+hive> select * from ginf where country like '%spain%' and ht like '%Barcelona%' and at like '%Real Madrid;
+hive> select * from ginf where country like '%spain%' and ht like '%Real Madrid'  and at like '%Barcelona%';
 
