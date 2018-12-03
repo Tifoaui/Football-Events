@@ -77,7 +77,7 @@ LOCATION '/user/cloudera/datatp3/football/';
 #SELECT * FROM foot.events SORT BY id_odsp  DESC LIMIT 2;
 INSERT INTO TABLE football.events SELECT * FROM foot.events;
 #SELECT * FROM football.events SORT BY id_odsp  DESC LIMIT 2;
-#hdfs dfs -rm /user/cloudera/datatp3/football/events.scv
+#hdfs dfs -rm /user/cloudera/datatp3/football/events.csv
 # count des records 
 hive> select count(*) from events;
 # El Classico
