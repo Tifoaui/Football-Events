@@ -201,3 +201,60 @@ grunt > describe ginfpig;
 grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
 grunt > describe eventspig;
 
+#El Classico
+select g.*, ev.text 
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
+
+ElCalssico under Morihno
+#El Classico
+select g.*, ev.text 
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
+
+#Load Data to Pig from Hive
+#Note: While loading Hive data into Pig relation, make sure that the user has started Hive metastore service using the below command –
+sudo service hive-metastore start
+hive –service metastore
+
+Keep the Hive metastore service running in one terminal and use Pig in another terminal
+Now to load the hive data into pig, Pig uses HCataLoader() function and it looks like this
+
+pig
+grunt > ginfpig = LOAD 'football.ginf' USING org.apache.hive.hcatalog.pig.HCatLoader();
+grunt > describe ginfpig;
+
+grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
+grunt > describe eventspig;
+
+
+# Word Count with pig 
+
+INSERT OVERWRITE DIRECTORY '/user/cloudera/datatp3/football/comments.txt' ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+select  ev.text 
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
+
+#comments = LOAD '/user/cloudera/datatp3/football/comments.txt/000001_0' using PigStorage('\t') as (line:chararray);
+#words = FOREACH comments GENERATE FLATTEN(TOKENIZE(line)) as word;
+#grouped = GROUP words BY word;
+#wordcount = FOREACH grouped GENERATE group, COUNT(words);
+#DUMP wordcount;
+
+A = load '/user/cloudera/datatp3/football/comments.txt/000001_0';
+B = foreach A generate flatten(TOKENIZE((chararray)$0)) as word;
+C = filter B by word matches '\\w+';
+D = group C by word;
+E = foreach D generate COUNT(C), group;
+store E into '/user/cloudera/datatp3/football/comments.txt/output';
+
+
+A_2 = load '/user/cloudera/datatp3/football/comments.txt/000002_0';
+B_2 = foreach A_2 generate flatten(TOKENIZE((chararray)$0)) as word;
+C_2 = filter B_2 by word matches '\\w+';
+D_2 = group C_2 by word;
+E_2 = foreach D_2 generate COUNT(C_2), group;
+store E_2 into '/user/cloudera/datatp3/football/comments.txt/output2';
