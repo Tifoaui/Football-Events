@@ -166,13 +166,38 @@ CREATE EXTERNAL TABLE IF NOT EXISTS foot.ginf (
   STORED AS TEXTFILE
  LOCATION '/user/cloudera/datatp3/football/';
 
- SELECT * FROM foot.ginf SORT BY id_odsp  DESC LIMIT 2;
- 
+SELECT * FROM foot.ginf SORT BY id_odsp  DESC LIMIT 2;
 INSERT INTO TABLE football.ginf SELECT * FROM foot.ginf;
 hdfs dfs -rm /user/cloudera/datatp3/football/ginf.csv
-
 
 # El Classico
 hive> select * from ginf where country like '%spain%' and ht like '%Barcelona%' and at like '%Real Madrid;
 hive> select * from ginf where country like '%spain%' and ht like '%Real Madrid'  and at like '%Barcelona%';
+
+select g.*, ev.*
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
+
+# Sentiment Analysis El Classico & Jose Mourinho
+select g.*, ev.text 
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
+
+
+#Load Data to Pig from Hive
+#Note: While loading Hive data into Pig relation, make sure that the user has started Hive metastore service using the below command –
+sudo service hive-metastore start
+hive –service metastore
+
+Keep the Hive metastore service running in one terminal and use Pig in another terminal
+Now to load the hive data into pig, Pig uses HCataLoader() function and it looks like this
+
+pig
+grunt > ginfpig = LOAD 'football.ginf' USING org.apache.hive.hcatalog.pig.HCatLoader();
+grunt > describe ginfpig;
+
+grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
+grunt > describe eventspig;
 
