@@ -1,15 +1,15 @@
 # Préparation d'un dossier qui va contenir les données sur hdfs  
 hdfs dfs -ls
 hdfs dfs -mkdir /user/cloudera/datatp3
-
-#Football Events 
-wget https://www.kaggle.com/secareanualin/football-events/downloads/football-events.zip
-unzip football-events.zip
-#Copier les données depuis Local Vers hdfs
 hdfs dfs -mkdir  /user/cloudera/datatp3/football
+#Récupération des données Football Event depuis Kaggle
+wget https://www.kaggle.com/secareanualin/football-events/downloads/football-events.zip
+#Exraire les donnesé 
+unzip football-events.zip
+#Copier les données depuis local Vers hdfs
 hdfs dfs -copyFromLocal ginf.csv events.csv dictionary.txt /user/cloudera/datatp3/football
-hive
 # Creation de schema ou base de données
+hive
 CREATE DATABASE IF NOT EXISTS football;
 SHOW DATABASES;
 # Creation des tables sur hive
@@ -42,8 +42,8 @@ fast_break int
 row format delimited fields terminated by ','
 ;
 
-##Chargement de données vers Hive 
-# Chargement table vers staging bd foot 
+#Chargement de données vers Hive 
+#Chargement table vers des tables de staging sur un schema foot 
 CREATE SCHEMA IF NOT EXISTS foot;
 CREATE EXTERNAL TABLE IF NOT EXISTS foot.events (
 id_odsp string, 
@@ -73,19 +73,19 @@ fast_break int
  FIELDS TERMINATED BY ','
  STORED AS TEXTFILE
 LOCATION '/user/cloudera/datatp3/football/';
- 
- 
-#SELECT * FROM foot.events SORT BY id_odsp  DESC LIMIT 2;
+# Vérification que les données sont bien chargé sur les tables de staging
+SELECT * FROM foot.events SORT BY id_odsp  DESC LIMIT 2;
+#Chargment des données vers la bd football
 INSERT INTO TABLE football.events SELECT * FROM foot.events;
-#SELECT * FROM football.events SORT BY id_odsp  DESC LIMIT 2;
-#hdfs dfs -rm /user/cloudera/datatp3/football/events.csv
-
+SELECT * FROM football.events SORT BY id_odsp  DESC LIMIT 2;
 #LOAD DATA INPATH '/user/cloudera/datatp3/football/events.csv' OVERWRITE INTO TABLE events;
 LOAD DATA LOCAL INPATH '/home/user/cloudera/.staging/events.csv' OVERWRITE INTO TABLE football.events;
-# count des records 
-hive> select count(*) from events;
+# Vefication de nombre d'enrigistrement avec count
+hive> select count(id_odsp) from events;
+#Supprimer les données de hdfs
+#hdfs dfs -rm /user/cloudera/datatp3/football/events.csv
 
-
+# Traitement des données 
 /********
 11 unique events (1-Attempt(shot), 2-Corner, 3-Foul, 4-Yellow Card, 5-Second yellow card, 6-(Straight) red card, 7-Substitution, 8-Free kick won, 9-Offside, 10-Hand Ball, 11-Penalty conceded)
 */
@@ -108,11 +108,8 @@ group by side
 ;
 /*****************************************/
 
-
-
-
 #chargement de table ginf
- # Création de table ginf,
+# Création de table ginf,
 use football; 
 create table if not exists football.ginf (
  id_odsp string,
@@ -135,9 +132,9 @@ create table if not exists football.ginf (
  odd_bts_n DOUBLE
 )
 ROW FORMAT DELIMITED
-  FIELDS TERMINATED BY ','
-  STORED AS TEXTFILE
- LOCATION '/user/cloudera/datatp3/football/'
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/cloudera/datatp3/football/'
 ;
 
 ## Staging 
@@ -179,7 +176,7 @@ from football.ginf as g
 right join football.events as ev on (g.id_odsp=ev.id_odsp)
 where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
 
-# Sentiment Analysis El Classico & Jose Mourinho
+# Sentiment Analysis El Classico 
 select g.*, ev.text 
 from football.ginf as g
 right join football.events as ev on (g.id_odsp=ev.id_odsp)
@@ -229,9 +226,7 @@ grunt > describe ginfpig;
 grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
 grunt > describe eventspig;
 
-
 # Word Count with pig 
-
 INSERT OVERWRITE DIRECTORY '/user/cloudera/datatp3/football/comments.txt' ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
 select  ev.text 
 from football.ginf as g
@@ -250,7 +245,6 @@ C = filter B by word matches '\\w+';
 D = group C by word;
 E = foreach D generate COUNT(C), group;
 store E into '/user/cloudera/datatp3/football/comments.txt/output';
-
 
 A_2 = load '/user/cloudera/datatp3/football/comments.txt/000002_0';
 B_2 = foreach A_2 generate flatten(TOKENIZE((chararray)$0)) as word;
