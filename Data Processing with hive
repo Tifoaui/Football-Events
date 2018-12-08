@@ -109,7 +109,7 @@ group by side
 /*****************************************/
 
 #chargement de table ginf
-# Création de table ginf,
+# Création de table ginf sur la bd football,
 use football; 
 create table if not exists football.ginf (
  id_odsp string,
@@ -139,30 +139,29 @@ LOCATION '/user/cloudera/datatp3/football/'
 
 ## Staging 
 CREATE EXTERNAL TABLE IF NOT EXISTS foot.ginf (
- id_odsp string,
- link_odsp string,
- adv_stats BOOLEAN,
- date date,
- league string,
- season string,
- country string,
- ht string,
- at  string,
- fthg  int,
- ftag int,
- odd_h DOUBLE,
- odd_d DOUBLE,
- odd_a DOUBLE,
- odd_over DOUBLE,
- odd_under DOUBLE,
- odd_bts DOUBLE,
- odd_bts_n DOUBLE
+id_odsp string,
+link_odsp string,
+adv_stats BOOLEAN,
+date date,
+league string,
+season string,
+country string,
+ht string,
+at  string,
+fthg  int,
+ftag int,
+odd_h DOUBLE,
+odd_d DOUBLE,
+odd_a DOUBLE,
+odd_over DOUBLE,
+odd_under DOUBLE,
+odd_bts DOUBLE,
+odd_bts_n DOUBLE
 )
- ROW FORMAT DELIMITED
-  FIELDS TERMINATED BY ','
-  STORED AS TEXTFILE
- LOCATION '/user/cloudera/datatp3/football/';
-
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/user/cloudera/datatp3/football/';
 SELECT * FROM foot.ginf SORT BY id_odsp  DESC LIMIT 2;
 INSERT INTO TABLE football.ginf SELECT * FROM foot.ginf;
 hdfs dfs -rm /user/cloudera/datatp3/football/ginf.csv
@@ -170,59 +169,35 @@ hdfs dfs -rm /user/cloudera/datatp3/football/ginf.csv
 # El Classico
 hive> select * from ginf where country like '%spain%' and ht like '%Barcelona%' and at like '%Real Madrid;
 hive> select * from ginf where country like '%spain%' and ht like '%Real Madrid'  and at like '%Barcelona%';
-
+# Quand c'est le barça que joue en local
 select g.*, ev.*
 from football.ginf as g
 right join football.events as ev on (g.id_odsp=ev.id_odsp)
 where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
 
+# Quand c'est le réal qui joue en local
+select g.*, ev.*
+from football.ginf as g
+right join football.events as ev on (g.id_odsp=ev.id_odsp)
+where g.country like '%spain%' and g.ht like '%Real Madrid' and g.at like '%Barcelona%'; 
+
 # Sentiment Analysis El Classico 
-select g.*, ev.text 
+select ev.text 
 from football.ginf as g
 right join football.events as ev on (g.id_odsp=ev.id_odsp)
 where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
 
-
+# Analyse des commentaires sur PIG
 #Load Data to Pig from Hive
 #Note: While loading Hive data into Pig relation, make sure that the user has started Hive metastore service using the below command –
 sudo service hive-metastore start
 hive –service metastore
-
-Keep the Hive metastore service running in one terminal and use Pig in another terminal
-Now to load the hive data into pig, Pig uses HCataLoader() function and it looks like this
-
+#Keep the Hive metastore service running in one terminal and use Pig in another terminal
+#Now to load the hive data into pig, Pig uses HCataLoader() function and it looks like this
+# Lancer Pig
 pig
 grunt > ginfpig = LOAD 'football.ginf' USING org.apache.hive.hcatalog.pig.HCatLoader();
 grunt > describe ginfpig;
-
-grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
-grunt > describe eventspig;
-
-#El Classico
-select g.*, ev.text 
-from football.ginf as g
-right join football.events as ev on (g.id_odsp=ev.id_odsp)
-where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
-
-ElCalssico under Morihno
-#El Classico
-select g.*, ev.text 
-from football.ginf as g
-right join football.events as ev on (g.id_odsp=ev.id_odsp)
-where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
-
-#Load Data to Pig from Hive
-#Note: While loading Hive data into Pig relation, make sure that the user has started Hive metastore service using the below command –
-sudo service hive-metastore start
-hive –service metastore
-
-Keep the Hive metastore service running in one terminal and use Pig in another terminal
-Now to load the hive data into pig, Pig uses HCataLoader() function and it looks like this
-
-pig
-grunt > ginfpig = LOAD 'football.ginf' USING org.apache.hive.hcatalog.pig.HCatLoader();
-grunt > describe ginfpig;
-
 grunt > eventspig = LOAD 'football.events' USING org.apache.hive.hcatalog.pig.HCatLoader();
 grunt > describe eventspig;
 
@@ -233,19 +208,14 @@ from football.ginf as g
 right join football.events as ev on (g.id_odsp=ev.id_odsp)
 where g.country like '%spain%' and  g.ht like '%Barcelona%' and g.at like '%Real Madrid%'; 
 
-#comments = LOAD '/user/cloudera/datatp3/football/comments.txt/000001_0' using PigStorage('\t') as (line:chararray);
-#words = FOREACH comments GENERATE FLATTEN(TOKENIZE(line)) as word;
-#grouped = GROUP words BY word;
-#wordcount = FOREACH grouped GENERATE group, COUNT(words);
-#DUMP wordcount;
-
+# Charger des données du premiere match sur pig
 A = load '/user/cloudera/datatp3/football/comments.txt/000001_0';
 B = foreach A generate flatten(TOKENIZE((chararray)$0)) as word;
 C = filter B by word matches '\\w+';
 D = group C by word;
 E = foreach D generate COUNT(C), group;
 store E into '/user/cloudera/datatp3/football/comments.txt/output';
-
+# Charger des données du deuxieme match sur pig
 A_2 = load '/user/cloudera/datatp3/football/comments.txt/000002_0';
 B_2 = foreach A_2 generate flatten(TOKENIZE((chararray)$0)) as word;
 C_2 = filter B_2 by word matches '\\w+';
